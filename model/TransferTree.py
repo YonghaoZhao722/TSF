@@ -7,14 +7,6 @@ from sksurv.compare import compare_survival
 import numpy as np
 
 
-def _average_survival_function(Y_pred):
-    # Stack all y_pred values together
-    stacked_y_preds = np.stack(Y_pred)
-
-    # Compute the average along the column direction (i.e., for each event)
-    avg_survival_function = np.mean(stacked_y_preds, axis=0)
-
-    return avg_survival_function
 
 
 def _compute_unique_times(timelines):
@@ -64,12 +56,6 @@ class Node:
         self.depth = depth
 
     def _predict(self, y):
-
-        # chf = KaplanMeierFitter()
-        # chf.fit(y['Survival.months'], event_observed=y['status'])
-        # self.value = chf.survival_function_
-        # self.timeline = chf.timeline
-
         naf = NelsonAalenFitter()
         naf.fit(y['Survival.months'], event_observed=y['status'])
         self.value=naf.cumulative_hazard_
