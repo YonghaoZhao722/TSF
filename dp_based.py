@@ -5,7 +5,6 @@ from model.methods import load_rsf_data
 from global_names import *
 
 
-
 if __name__ == "__main__":
     features_order = ['gender_code', 'age', 'tumor.size', 'grade_code', 'T', 'lymphcat', 'PNI', 'cea_positive']
     dataset_name = WCH

@@ -14,10 +14,9 @@ def _compute_unique_times(timelines):
     for timeline in timelines:
         unique_times_set.update(timeline)
 
-    # 将集合转换回列表
     unique_times = list(unique_times_set)
 
-    # 对 unique_times 列表进行排序（可选）
+    # Sorting the unique_times list (optional)
     unique_times.sort()
     return unique_times
 
@@ -207,16 +206,16 @@ class Tree:
         best_feature, best_threshold = None, None
         for feature in selected_features:
             thresholds = np.unique(X.iloc[:, feature])
-            if len(thresholds) == 2:  # 如果特征是二元变量
-                for threshold in thresholds:  # 直接按0和1分为两组
+            if len(thresholds) == 2:  # If the feature is a binary variable
+                for threshold in thresholds:  # Directly divide into two groups according to 0 and 1
                     left_indices = X.iloc[:, feature] == threshold
                     group_indicator = []
                     if len(y[left_indices]) >= self.min_samples_leaf and len(y[~left_indices]) >= self.min_samples_leaf:
                         for is_left in left_indices:
                             if is_left:
-                                group_indicator.append(1)  # 左子节点的样本
+                                group_indicator.append(1)  # Sample of left child node
                             else:
-                                group_indicator.append(0)  # 右子节点的样本
+                                group_indicator.append(0)  # Sample of right child node
                         logrank = _calculate_logrank(y, group_indicator)
                         if logrank > best_logrank:
                             best_logrank = logrank
@@ -227,16 +226,16 @@ class Tree:
                         leaf = True
                     else:
                         break
-            else:  # 处理非二元变量的情况
+            else:  # Handling non-binary variables
                 for threshold in thresholds:
                     left_indices = X.iloc[:, feature] <= threshold
                     group_indicator = []
                     if len(y[left_indices]) >= self.min_samples_leaf and len(y[~left_indices]) >= self.min_samples_leaf:
                         for is_left in left_indices:
                             if is_left:
-                                group_indicator.append(1)  # 左子节点的样本
+                                group_indicator.append(1)  # Samples of left child nodes
                             else:
-                                group_indicator.append(0)  # 右子节点的样本
+                                group_indicator.append(0)  # Samples of right child nodes
                         logrank = _calculate_logrank(y, group_indicator)
                         if logrank > best_logrank:
                             best_logrank = logrank
@@ -268,7 +267,7 @@ class Tree:
             selected_features = [node.feature]
         elif self.forest and self.max_feature is not None:
             selected_features = self._choose_features(depth=node.depth)
-        # 否则，选择所有特征
+        # Otherwise, select all features
         else:
             selected_features = range(self.n_features_)
 

@@ -26,7 +26,7 @@ def load_rsf_data(dataset_name):
                      'pni': 'PNI', 'OS': 'Survival.months', 'OSS': 'status'}
 
     if dataset_name == SEER:
-        df = pd.read_csv("data/stage_processed.csv")
+        df = pd.read_csv("data/SEER.csv")
         X = df[['age', 'tumor.size', 'T', 'gender_code', 'grade_code',
                 'PNI',
                 'lymphcat',
@@ -43,6 +43,7 @@ def load_rsf_data(dataset_name):
 
     else:
         df = pd.read_csv("data/stagel/train_hx.csv")
+        # df = pd.read_csv("data/example.csv")  # please upload your dataset here
 
     df = df.rename(columns=rename_columns)
     df['grade_code'] = df['grade_code'].apply(lambda x: 1 if x == 0 else 0)

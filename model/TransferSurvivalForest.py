@@ -5,6 +5,9 @@ import pandas as pd
 from pycox.evaluation import EvalSurv
 from joblib import Parallel, delayed
 from model.TransferTree import Tree
+import os
+os.environ['JOBLIB_TEMP_FOLDER'] = 'C:/temp/joblib'  # This is compatibility settings for parallel computing
+
 
 
 def bootstrap_data(X, y, tree_random):
@@ -45,7 +48,6 @@ def get_probabilities(features_order):
         for feature in features_order:
             features[feature] /= sum_values
 
-        # 存储处理后的数据
         data[depth] = list(features.values())
     return data
 
@@ -93,13 +95,14 @@ class Forest:
 
     def fit(self, X, y):
         if self.estimators:
-            # 从 self.estimators 中有放回地抽取 self.n_estimators 个估计器
+            # Randomly sample with replacement n_estimators number of estimators from self.estimators
             # selected_estimators = self.random_state.choice(self.estimators, self.n_estimators, replace=True)
             selected_estimators = []
 
             while len(selected_estimators) < self.n_estimators:
                 estimator = self.random_state.choice(self.estimators)
 
+                # Skip trees with only one node
                 if len(estimator.nodes) == 1:
                     continue
 
@@ -113,7 +116,7 @@ class Forest:
                 estimators.max_transfer_depth=self.max_transfer_depth
 
             self.estimators = []
-            # 使用抽取出的估计器进行训练
+            # Train using the selected estimators
             self.estimators = (
                 Parallel(n_jobs=-1)(
                     delayed(estimator.fit)(X, y) for estimator in selected_estimators
@@ -130,7 +133,7 @@ class Forest:
         predictions = None
         all_unique_value = set()
         for estimator in self.estimators:
-            # 有的树拟合了之后只有一个结点，这些树不会对预测结果产生影响，去除他们以加快预测速度
+            # Some trees only have one node after fitting, these trees won't affect predictions, remove them to speed up prediction
             if len(estimator.nodes) == 1:
                 continue
             Y_pred, unique_times = estimator.predict(X)
@@ -138,9 +141,9 @@ class Forest:
             Y_pred_df = get_step_function(Y_pred)
 
             if predictions is None:
-                predictions = Y_pred_df.copy()  # 第一次迭代时，将 predictions 初始化为第一个预测结果的 DataFrame
+                predictions = Y_pred_df.copy()  # During first iteration, initialize predictions as a copy of the first prediction DataFrame
             else:
-                # 使用 reindex 和 ffill 对两个 DataFrame 进行索引对齐和 forward fill
+                # Use reindex and ffill to align indices of the two DataFrames and perform forward fill
                 predictions = predictions.reindex(index=predictions.index.union(Y_pred_df.index)).ffill().add(
                     Y_pred_df.reindex(index=predictions.index.union(Y_pred_df.index)).ffill())
 
@@ -160,4 +163,3 @@ class Forest:
 
     def load_softmax_probabilities(self,features_order):
         self.probabilities = get_probabilities(features_order)
-
