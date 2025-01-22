@@ -12,16 +12,17 @@
 TSF/
 │── rsf_models/                # Directory to store trained RSF models
 │── data/                      # Directory to store datasets (SEER as an example)
+│   ├── SEER.csv               # Pretrain data example
 │── source_forest.py           # Trains the source forest and saves the model
 │── target_forest_finetune.py  # Transfers and fine-tunes the target forest
 │── dp_based.py                # DP-based target forest training
 │── calculate_dp.py            # Computes feature probabilities
 │── model/
 │   ├── TransferSurvivalForest.py  # Core TSF implementation
+│   ├── TransferTree.py  # Core TSF implementation
 │   ├── methods.py                 # Preprocessing and utility functions
 │── global_names.py               # Global variables
 │── README.md                     # Project documentation
-│── demo.py                        # Example script for running TSF
 ```
 
 ---
@@ -37,7 +38,7 @@ pip install -r requirements.txt
 ### 2️⃣ Data Preparation
 - The **pretrained dataset** and **target dataset** must be aligned (i.e., they must have the same number of features and feature names).
 - The repository provides a pretrain data sample (data/SEER.csv)
-
+- Please put your training data in the folder `data`.
 ---
 
 ## 🎯 Usage
@@ -120,6 +121,12 @@ Average CTD: 0.8216
 
 ---
 
+## 🔥 Citation
+
+If you use this code in your research, please cite the following paper:
+(waiting for arxiv)
+
+---
 ### 📩 Contact
 For questions or suggestions, please reach out to:
 - **Author**: Yonghao Zhao
