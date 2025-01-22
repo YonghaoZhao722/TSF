@@ -42,8 +42,8 @@ def load_rsf_data(dataset_name):
         return X, y
 
     else:
-        df = pd.read_csv("data/stagel/train_hx.csv")
-        # df = pd.read_csv("data/example.csv")  # please upload your dataset here
+        # df = pd.read_csv("data/stagel/train_hx.csv")
+        df = pd.read_csv("data/example.csv")  # please prepare your dataset here
 
     df = df.rename(columns=rename_columns)
     df['grade_code'] = df['grade_code'].apply(lambda x: 1 if x == 0 else 0)
