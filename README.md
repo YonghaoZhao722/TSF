@@ -101,20 +101,6 @@ python dp_based.py
 
 ---
 
-## 📊 Example Results
-
-Example Output:
-```
-RSF model saved at rsf_models/source_forest.pkl
-0.8123
-0.8291
-0.8045
-...
-Average CTD: 0.8216
-```
-
----
-
 ## 📝 Future Improvements
 - **Upload public datasets**.
 - **Integration of deep learning transfer methods (e.g., DeepSurv, DeepHit)**.
