@@ -73,31 +73,6 @@ python dp_based.py
   - Evaluates the model using **10-fold cross-validation** and computes CTD scores.
 
 
-## 📊 Code Explanation
-
-### `train_source_forest.py`
-- Trains the **source forest (RSF)** and saves `source_forest.pkl`.
-- Computes feature usage frequencies and saves them in `dp.csv`.
-- Key Functions:
-  - `train_source_forest()` - Trains and saves the RSF model.
-  - `calculate_and_write_total_feature_probability()` - Computes feature probability.
-
-### `target_forest_finetune.py`
-- Loads `source_forest.pkl` and **transfers** forest structures.
-- Fine-tunes the model on a **small target dataset**.
-- Uses **10-fold cross-validation** to compute **CTD scores**.
-
-### `dp_based.py`
-- Uses **Depth Probability (DP) method** to train RSF.
-- Performs **10-fold cross-validation** on the WCH dataset.
-- Computes **CTD scores**.
-
-### `calculate_dp.py`
-- Computes **feature probability distributions** for target forest transfer.
-- Key Functions:
-  - `save_node_features()` - Extracts feature distributions per tree.
-  - `calculate_feature_probability()` - Computes feature probability at different depths.
-  - `calculate_and_write_total_feature_probability()` - Saves overall feature probability to CSV.
 
 ---
 
