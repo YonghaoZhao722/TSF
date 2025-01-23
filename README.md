@@ -124,7 +124,7 @@ Average CTD: 0.8216
 ## 🔥 Citation
 
 If you use this code in your research, please cite the following paper:
-(waiting for arxiv)
+[Zhao, Y., Li, C., Shu, C., Wu, Q., Li, H., Xu, C., Li, T., Wang, Z., Luo, Z., & He, Y. (2025). Tackling small sample survival analysis via transfer learning: A study of colorectal cancer prognosis. arXiv preprint arXiv:2501.12421. https://arxiv.org/abs/2501.12421]
 
 ---
 ### 📩 Contact
