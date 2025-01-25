@@ -3,6 +3,10 @@
 ## 📌 Project Overview
 
 **Transfer Survival Forest (TSF)** is a method designed for **small-sample survival analysis**. It is based on **Random Survival Forest (RSF)** and utilizes **transfer learning** to improve survival prediction accuracy. This project implements TSF training, feature probability calculation, and target forest fine-tuning.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/297cb09e-c909-400d-aca6-ee03e078f1c5" width="60%">
+</p>
+
 
 ---
 
