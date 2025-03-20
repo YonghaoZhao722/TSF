@@ -42,7 +42,7 @@ pip install -r requirements.txt
 ### 2️⃣ Data Preparation
 - The **pretrained dataset** and **target dataset** must be aligned (i.e., they must have the same number of features and feature names).
 - The repository provides a pretrain data sample (data/SEER.csv)
-- Please put your training data in the folder `data`.
+- Please put your training cohort in the folder `data`.
 ---
 
 ## 🎯 Usage
