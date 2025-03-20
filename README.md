@@ -93,6 +93,5 @@ If you use this code in your research, please cite the following paper:
 
 ---
 ### 📩 Contact
-For questions or suggestions, please reach out to:
-- **Email**: sc22yz3@leeds.ac.uk
+For questions or suggestions, please reach out to: sc22yz3@leeds.ac.uk
 
