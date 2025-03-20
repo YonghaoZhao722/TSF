@@ -94,6 +94,5 @@ If you use this code in your research, please cite the following paper:
 ---
 ### 📩 Contact
 For questions or suggestions, please reach out to:
-- **Author**: Yonghao Zhao
 - **Email**: sc22yz3@leeds.ac.uk
 
