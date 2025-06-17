@@ -82,7 +82,6 @@ python dp_based.py
 
 ## 📝 Future Improvements
 - **Upload public datasets**.
-- **Integration of deep learning transfer methods (e.g., DeepSurv, DeepHit)**.
 
 ---
 
