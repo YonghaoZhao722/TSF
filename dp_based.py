@@ -1,18 +1,35 @@
 import numpy as np
+import pandas as pd
 from sklearn.model_selection import StratifiedKFold
-from model.TransferSurvivalForest import Forest,get_probabilities
-from model.methods import load_rsf_data
+from model.TransferSurvivalForest import Forest, get_probabilities
+from model.methods import load_preprocessed_data, calculate_comprehensive_metrics
 from global_names import *
 
 
 if __name__ == "__main__":
     features_order = ['gender_code', 'age', 'tumor.size', 'grade_code', 'T', 'lymphcat', 'PNI', 'cea_positive']
     dataset_name = WCH
-    X, y = load_rsf_data(dataset_name)
+    
+    # Load preprocessed data
+    try:
+        X, y = load_preprocessed_data(dataset_name)
+        print(f"Loaded preprocessed {dataset_name} data successfully")
+    except FileNotFoundError:
+        print("Preprocessed data not found. Please run preprocess_data.py first.")
+        exit(1)
+    
     kf = StratifiedKFold(n_splits=10, shuffle=True, random_state=1234)
 
-    average_ctd = []
-    for train_index, test_index in kf.split(X, y['status']):
+    # Initialize metrics storage
+    all_metrics = {
+        'ctd': [],
+        'c_index': [],
+        'integrated_brier_score': []
+    }
+
+    for fold, (train_index, test_index) in enumerate(kf.split(X, y['status'])):
+        print(f"Processing fold {fold + 1}/10...")
+        
         rsf = Forest(n_estimators=50,
                      min_samples_leaf=6,
                      min_samples_split=13,
@@ -23,9 +40,63 @@ if __name__ == "__main__":
         y_train, y_test = y[train_index], y[test_index]
 
         rsf.fit(X_train, y_train)
-        current_ctd = rsf.ctd(X_test, y_test)
+        
+        # Calculate comprehensive metrics
+        metrics = calculate_comprehensive_metrics(rsf, X_test, y_test)
+        
+        # Store metrics
+        for key in all_metrics.keys():
+            all_metrics[key].append(metrics[key])
+        
+        # Print current fold results with safe formatting
+        def safe_format(value, name):
+            try:
+                if isinstance(value, (int, float)) and np.isfinite(value):
+                    return f"{value:.4f}"
+                else:
+                    return "N/A"
+            except:
+                return "N/A"
+                
+        print(f"  CTD: {safe_format(metrics['ctd'], 'CTD')}")
+        print(f"  C-index: {safe_format(metrics['c_index'], 'C-index')}")
+        print(f"  Integrated Brier Score: {safe_format(metrics['integrated_brier_score'], 'IBS')}")
 
-        print(current_ctd)
-        average_ctd.append(current_ctd)
-    print(f"Average CTD: {np.mean(average_ctd)}")
+    # Print final results  
+    print("\n" + "="*50)
+    print("FINAL RESULTS (Mean ± Std)")
+    print("="*50)
+    
+    def safe_mean_std(values):
+        """Calculate mean and std, handling NaN values"""
+        clean_values = []
+        for v in values:
+            try:
+                if isinstance(v, (int, float)) and np.isfinite(v):
+                    clean_values.append(float(v))
+            except:
+                continue
+        if clean_values:
+            return np.mean(clean_values), np.std(clean_values)
+        else:
+            return np.nan, np.nan
+    
+    def safe_format_result(mean_val, std_val):
+        """Safely format mean ± std results"""
+        try:
+            if np.isfinite(mean_val) and np.isfinite(std_val):
+                return f"{mean_val:.4f} ± {std_val:.4f}"
+            else:
+                return "N/A"
+        except:
+            return "N/A"
+    
+    ctd_mean, ctd_std = safe_mean_std(all_metrics['ctd'])
+    print(f"CTD (Time-dependent): {safe_format_result(ctd_mean, ctd_std)}")
+    
+    c_index_mean, c_index_std = safe_mean_std(all_metrics['c_index'])
+    print(f"C-index (Harrell): {safe_format_result(c_index_mean, c_index_std)}")
+    
+    ibs_mean, ibs_std = safe_mean_std(all_metrics['integrated_brier_score'])
+    print(f"Integrated Brier Score: {safe_format_result(ibs_mean, ibs_std)}")
 

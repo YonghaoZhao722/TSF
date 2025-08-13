@@ -1,0 +1,18 @@
+name: tsf
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - numpy=1.26.3
+  - pandas=2.1.4
+  - scikit-learn=1.3.2
+  - joblib=1.3.2
+  - scipy=1.11.4
+  - pip
+  - pip:
+    - lifelines==0.27.8
+    - sklearn_pandas==2.2.0
+    - scikit-survival==0.22.2
+    - pycox==0.2.3
+    - torchtuples==0.2.2
