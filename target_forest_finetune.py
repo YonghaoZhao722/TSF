@@ -1,10 +1,13 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
-from model.methods import load_preprocessed_data, grapForest, calculate_comprehensive_metrics
+from model.methods import load_preprocessed_data, grapForest, calculate_comprehensive_metrics, set_all_seeds
 from global_names import *
 
 if __name__ == "__main__":
+    # Set all random seeds for reproducibility
+    set_all_seeds(1234)
+    
     dataset_name = WCH
     
     # Load preprocessed data
@@ -33,7 +36,8 @@ if __name__ == "__main__":
         rsf.min_samples_split = 6
         rsf.min_samples_leaf = 2
         rsf.max_features = 2
-        rsf.max_transfer_depth = 1
+        rsf.cc = 1
+        rsf.deterministic = True
 
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]
         y_train, y_test = y[train_index], y[test_index]

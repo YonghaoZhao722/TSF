@@ -2,11 +2,14 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
 from model.TransferSurvivalForest import Forest, get_probabilities
-from model.methods import load_preprocessed_data, calculate_comprehensive_metrics
+from model.methods import load_preprocessed_data, calculate_comprehensive_metrics, set_all_seeds
 from global_names import *
 
 
 if __name__ == "__main__":
+    # Set all random seeds for reproducibility
+    set_all_seeds(1234)
+    
     features_order = ['gender_code', 'age', 'tumor.size', 'grade_code', 'T', 'lymphcat', 'PNI', 'cea_positive']
     dataset_name = WCH
     
@@ -33,7 +36,9 @@ if __name__ == "__main__":
         rsf = Forest(n_estimators=50,
                      min_samples_leaf=6,
                      min_samples_split=13,
-                     max_features=3)
+                     max_features=3,
+                     random_state=1234,
+                     deterministic=True)
         rsf.probabilities = get_probabilities(features_order)
 
         X_train, X_test = X.iloc[train_index], X.iloc[test_index]

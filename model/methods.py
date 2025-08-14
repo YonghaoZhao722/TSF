@@ -1,6 +1,8 @@
 import pickle
 import numpy as np
 import pandas as pd
+import os
+import random
 from global_names import *
 from pycox.evaluation import EvalSurv
 
@@ -72,34 +74,84 @@ def grapForest(filename):
     return pickle.load(fr)
 
 
-def sample_data(x, y, n, k=None, verbose=True):
+def sample_data(x, y, n, k=10, verbose=True):
     np.random.seed(1234)
-    censor_rate = np.sum(y[1] == False) / len(y[1])
-    censored_indices = np.where(y[1] == False)[0]
-    uncensored_indices = np.where(y[1] == True)[0]
+    
+    # Handle structured array format
+    if hasattr(y, 'dtype') and y.dtype.names:
+        # y is a structured array, access via field names
+        status_field = 'status'
+        # Find the survival time field (could be 'Survival.months' or other)
+        time_fields = [name for name in y.dtype.names if name != 'status']
+        time_field = time_fields[0] if time_fields else 'Survival.months'
+        
+        status_data = y[status_field]
+        censor_rate = np.sum(status_data == False) / len(status_data)
+        censored_indices = np.where(status_data == False)[0]
+        uncensored_indices = np.where(status_data == True)[0]
+    else:
+        # y is a tuple format (y[0] = status, y[1] = survival time)
+        censor_rate = np.sum(y[1] == False) / len(y[1])
+        censored_indices = np.where(y[1] == False)[0]
+        uncensored_indices = np.where(y[1] == True)[0]
 
+    # Calculate initial distribution based on original censor rate
     num_censored = int(n * censor_rate)
     num_uncensored = n - num_censored
+    
+    # Ensure minimum uncensored samples if k is specified
+    if k is not None:
+        # Calculate the maximum possible uncensored samples
+        max_possible_uncensored = min(len(uncensored_indices), n)
+        # Set target uncensored to minimum of k and what's possible
+        target_uncensored = min(k, max_possible_uncensored)
+        
+        # If we need more uncensored samples than initially calculated
+        if target_uncensored > num_uncensored:
+            num_uncensored = target_uncensored
+            num_censored = n - num_uncensored
+            
+            # Ensure we don't exceed available censored samples
+            if num_censored > len(censored_indices):
+                num_censored = len(censored_indices)
+                num_uncensored = n - num_censored
+    
+    # Ensure we don't exceed available samples
+    num_censored = min(num_censored, len(censored_indices))
+    num_uncensored = min(num_uncensored, len(uncensored_indices))
+    
+    # Adjust if total exceeds n
+    total_samples = num_censored + num_uncensored
+    if total_samples > n:
+        # Reduce proportionally
+        ratio = n / total_samples
+        num_censored = int(num_censored * ratio)
+        num_uncensored = n - num_censored
 
-    censored_sample_indices = np.random.choice(censored_indices, num_censored, replace=False)
-    uncensored_sample_indices = np.random.choice(uncensored_indices, num_uncensored, replace=False)
+    # Sample indices
+    if num_censored > 0:
+        censored_sample_indices = np.random.choice(censored_indices, num_censored, replace=False)
+    else:
+        censored_sample_indices = np.array([])
+    
+    if num_uncensored > 0:
+        uncensored_sample_indices = np.random.choice(uncensored_indices, num_uncensored, replace=False)
+    else:
+        uncensored_sample_indices = np.array([])
 
     sample_indices = np.concatenate([censored_sample_indices, uncensored_sample_indices])
     np.random.shuffle(sample_indices)  # shuffle the indices to mix censored and uncensored samples
 
-    # If k is not None and num_uncensored is less than k, replace some censored samples with uncensored samples
-    if k is not None and num_uncensored < k:
-        additional_uncensored_indices = np.random.choice(uncensored_indices, k - num_uncensored, replace=False)
-        censored_to_remove = np.random.choice(censored_sample_indices, k - num_uncensored, replace=False)
-        sample_indices = np.setdiff1d(sample_indices, censored_to_remove, assume_unique=True)
-        sample_indices = np.concatenate([sample_indices, additional_uncensored_indices])
-        np.random.shuffle(sample_indices)  # shuffle the indices again after replacement
-        num_uncensored = k  # update num_uncensored to k
-
     if verbose:
-        print(f"uncensored:{num_uncensored}")
+        print(f"uncensored:{num_uncensored}, censored:{num_censored}, total:{len(sample_indices)}")
 
-    return x[sample_indices], (y[0][sample_indices], y[1][sample_indices])
+    # Return sampled data in the same format
+    if hasattr(y, 'dtype') and y.dtype.names:
+        # Return structured array format
+        return x.iloc[sample_indices], y[sample_indices]
+    else:
+        # Return tuple format
+        return x[sample_indices], (y[0][sample_indices], y[1][sample_indices])
 
 
 def load_preprocessed_data(dataset_name):
@@ -293,3 +345,52 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
         metrics['integrated_brier_score'] = np.nan
     
     return metrics
+
+
+def set_all_seeds(seed=1234):
+    """
+    Set seeds for all random number generators to ensure reproducibility.
+    
+    Args:
+        seed (int): The random seed to use (default: 1234)
+    """
+    # Set Python's built-in random seed
+    random.seed(seed)
+    
+    # Set NumPy random seed
+    np.random.seed(seed)
+    
+    # Set environment variable for Python hash randomization
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    
+    # Try to set PyTorch seeds if PyTorch is available
+    try:
+        import torch
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+        # Make PyTorch deterministic (may impact performance)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        print(f"PyTorch seeds set to {seed}")
+    except ImportError:
+        # PyTorch not available, skip
+        pass
+    
+    # Set joblib to use single thread for deterministic results
+    # This can be overridden if needed, but single-threaded is most reproducible
+    os.environ['OMP_NUM_THREADS'] = '1'
+    os.environ['MKL_NUM_THREADS'] = '1'
+    os.environ['OPENBLAS_NUM_THREADS'] = '1'
+    
+    print(f"All random seeds set to {seed}")
+
+
+def set_joblib_deterministic():
+    """
+    Configure joblib for deterministic parallel processing.
+    This trades some performance for reproducibility.
+    """
+    # Force single-threaded execution for maximum reproducibility
+    os.environ['JOBLIB_TEMP_FOLDER'] = 'C:/temp/joblib'
+    return {'n_jobs': 1}  # Return joblib kwargs for deterministic execution
