@@ -7,4 +7,6 @@
 *.pyc
 /preprocessed_data
 *_grid_search.py
+/grid_search*
+/parametric*
 ._*
