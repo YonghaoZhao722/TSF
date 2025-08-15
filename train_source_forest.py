@@ -7,15 +7,16 @@ def train_source_forest():
     # Set all random seeds for reproducibility
     set_all_seeds(1234)
     
-    dataset_name = WCH
+    dataset_name = SEER
     X, y = load_rsf_data(dataset_name)
 
-    rsf = Forest(n_estimators=40,
+    rsf = Forest(n_estimators=300,
                  min_samples_split=20,
                  min_samples_leaf=10,
                  random_state=1234,
                  max_features=3,
-                 deterministic=True)
+                 deterministic=True,)
+
 
     rsf.fit(X, y)
     path = "rsf_models/"

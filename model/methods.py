@@ -269,21 +269,79 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
         print(f"Warning: CTD calculation failed: {e}")
         metrics['ctd'] = np.nan
     
-    # Standard Concordance index (C-index) using manual calculation
+    # Time-dependent AUC
     try:
-        # Use risk scores from last time point (or median time)
-        if survival_probs.shape[0] > 0:
-            # Use survival probability at median time as risk score (inverted)
-            median_time_idx = len(survival_probs) // 2
-            risk_scores = -survival_probs.iloc[median_time_idx].values  # Higher risk = lower survival
+        # Calculate time-dependent AUC at multiple time points
+        observed_times = y_test_time[y_test_event]  # Only event times
+        if len(observed_times) > 3:
+            # Use quartiles of observed event times
+            eval_times = np.percentile(observed_times, [25, 50, 75])
         else:
-            risk_scores = np.zeros(len(y_test_time))
+            # Use quantiles of all times if not enough events
+            eval_times = np.percentile(y_test_time, [25, 50, 75])
         
-        c_index = _calculate_harrell_c_index(y_test_time, y_test_event, risk_scores)
-        metrics['c_index'] = float(c_index) if np.isfinite(c_index) else np.nan
+        # Ensure times are within valid range and positive
+        max_time = np.max(y_test_time)
+        eval_times = eval_times[eval_times < max_time * 0.9]
+        eval_times = eval_times[eval_times > 0]
+        
+        td_aucs = []
+        for t in eval_times:
+            # Define binary outcomes at time t
+            # Positive: event occurred by time t
+            # Negative: event-free at time t (censored after t or alive beyond t)
+            outcomes = []
+            scores = []
+            
+            for i in range(len(y_test_time)):
+                if y_test_event[i] and y_test_time[i] <= t:
+                    # Event occurred by time t
+                    outcomes.append(1)
+                elif y_test_time[i] > t:
+                    # Survived beyond time t (either censored or alive)
+                    outcomes.append(0)
+                # Skip cases where censored before time t (uninformative)
+                else:
+                    continue
+                
+                # Get survival probability at time t as score
+                if len(survival_probs.index) > 0:
+                    closest_idx = np.argmin(np.abs(survival_probs.index - t))
+                    # Use 1 - survival probability as risk score (higher = more likely to have event)
+                    risk_score = 1 - survival_probs.iloc[closest_idx, i]
+                    scores.append(risk_score)
+                else:
+                    scores.append(0.5)
+            
+            # Calculate AUC if we have both classes
+            if len(set(outcomes)) > 1 and len(outcomes) > 5:
+                try:
+                    from sklearn.metrics import roc_auc_score
+                    auc = roc_auc_score(outcomes, scores)
+                    td_aucs.append(auc)
+                except ImportError:
+                    # Manual AUC calculation if sklearn not available
+                    pos_scores = [scores[i] for i in range(len(scores)) if outcomes[i] == 1]
+                    neg_scores = [scores[i] for i in range(len(scores)) if outcomes[i] == 0]
+                    if len(pos_scores) > 0 and len(neg_scores) > 0:
+                        # Count concordant pairs
+                        concordant = sum(1 for p in pos_scores for n in neg_scores if p > n)
+                        total_pairs = len(pos_scores) * len(neg_scores)
+                        auc = concordant / total_pairs if total_pairs > 0 else 0.5
+                        td_aucs.append(auc)
+                except Exception:
+                    continue
+        
+        # Average AUC across time points
+        if td_aucs:
+            avg_td_auc = np.mean(td_aucs)
+            metrics['time_dependent_auc'] = float(avg_td_auc) if np.isfinite(avg_td_auc) else np.nan
+        else:
+            metrics['time_dependent_auc'] = np.nan
+            
     except Exception as e:
-        print(f"Warning: C-index calculation failed: {e}")
-        metrics['c_index'] = 0.5
+        print(f"Warning: Time-dependent AUC calculation failed: {e}")
+        metrics['time_dependent_auc'] = np.nan
     
     # Integrated Brier Score
     try:

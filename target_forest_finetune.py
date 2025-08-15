@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # Initialize metrics storage
     all_metrics = {
         'ctd': [],
-        'c_index': [],
+        'time_dependent_auc': [],
         'integrated_brier_score': []
     }
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
                 return "N/A"
                 
         print(f"  CTD: {safe_format(metrics['ctd'], 'CTD')}")
-        print(f"  C-index: {safe_format(metrics['c_index'], 'C-index')}")
+        print(f"  TD-AUC: {safe_format(metrics['time_dependent_auc'], 'TD-AUC')}")
         print(f"  Integrated Brier Score: {safe_format(metrics['integrated_brier_score'], 'IBS')}")
 
     # Print final results  
@@ -97,8 +97,8 @@ if __name__ == "__main__":
     ctd_mean, ctd_std = safe_mean_std(all_metrics['ctd'])
     print(f"CTD (Time-dependent): {safe_format_result(ctd_mean, ctd_std)}")
     
-    c_index_mean, c_index_std = safe_mean_std(all_metrics['c_index'])
-    print(f"C-index (Harrell): {safe_format_result(c_index_mean, c_index_std)}")
+    td_auc_mean, td_auc_std = safe_mean_std(all_metrics['time_dependent_auc'])
+    print(f"TD-AUC (Time-dependent): {safe_format_result(td_auc_mean, td_auc_std)}")
     
     ibs_mean, ibs_std = safe_mean_std(all_metrics['integrated_brier_score'])
     print(f"Integrated Brier Score: {safe_format_result(ibs_mean, ibs_std)}")
