@@ -207,22 +207,13 @@ def _calculate_harrell_c_index(time, event, risk_scores):
     return concordant / total_pairs if total_pairs > 0 else 0.5
 
 
-def calculate_comprehensive_metrics(model, X_test, y_test):
+def _prepare_survival_data(model, X_test, y_test):
     """
-    Calculate comprehensive survival evaluation metrics
+    Helper function to prepare survival data for metric calculations
     
-    Parameters:
-    -----------
-    model : Forest
-        Trained survival model
-    X_test : pandas.DataFrame
-        Test features
-    y_test : numpy.ndarray
-        Test targets with status and survival time
-        
     Returns:
     --------
-    dict : Dictionary containing evaluation metrics
+    tuple: (y_test_event, y_test_time, survival_probs)
     """
     # Make predictions
     model.predict(X_test)
@@ -257,20 +248,57 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
             min(time_points), max(time_points), survival_probs.shape[0]
         )
     
-    # Calculate metrics
-    metrics = {}
+    return y_test_event, y_test_time, survival_probs
+
+
+def calculate_concordance_time_dependent(model, X_test, y_test):
+    """
+    Calculate Time-dependent Concordance index (CTD) using Antolini method
     
-    # Time-dependent Concordance index (CTD) using Antolini method
+    Parameters:
+    -----------
+    model : Forest
+        Trained survival model
+    X_test : pandas.DataFrame
+        Test features
+    y_test : numpy.ndarray
+        Test targets with status and survival time
+        
+    Returns:
+    --------
+    float : CTD value or np.nan if calculation fails
+    """
     try:
+        y_test_event, y_test_time, survival_probs = _prepare_survival_data(model, X_test, y_test)
+        
         ev_ctd = EvalSurv(survival_probs, y_test_time, y_test_event)
         ctd_value = ev_ctd.concordance_td('antolini')
-        metrics['ctd'] = float(ctd_value) if np.isfinite(ctd_value) else np.nan
+        return float(ctd_value) if np.isfinite(ctd_value) else np.nan
     except Exception as e:
         print(f"Warning: CTD calculation failed: {e}")
-        metrics['ctd'] = np.nan
+        return np.nan
+
+
+def calculate_time_dependent_auc(model, X_test, y_test):
+    """
+    Calculate Time-dependent AUC at multiple time points and return the average
     
-    # Time-dependent AUC
+    Parameters:
+    -----------
+    model : Forest
+        Trained survival model
+    X_test : pandas.DataFrame
+        Test features
+    y_test : numpy.ndarray
+        Test targets with status and survival time
+        
+    Returns:
+    --------
+    float : Average time-dependent AUC or np.nan if calculation fails
+    """
     try:
+        y_test_event, y_test_time, survival_probs = _prepare_survival_data(model, X_test, y_test)
+        
         # Calculate time-dependent AUC at multiple time points
         observed_times = y_test_time[y_test_event]  # Only event times
         if len(observed_times) > 3:
@@ -335,16 +363,35 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
         # Average AUC across time points
         if td_aucs:
             avg_td_auc = np.mean(td_aucs)
-            metrics['time_dependent_auc'] = float(avg_td_auc) if np.isfinite(avg_td_auc) else np.nan
+            return float(avg_td_auc) if np.isfinite(avg_td_auc) else np.nan
         else:
-            metrics['time_dependent_auc'] = np.nan
+            return np.nan
             
     except Exception as e:
         print(f"Warning: Time-dependent AUC calculation failed: {e}")
-        metrics['time_dependent_auc'] = np.nan
+        return np.nan
+
+
+def calculate_integrated_brier_score(model, X_test, y_test):
+    """
+    Calculate Integrated Brier Score
     
-    # Integrated Brier Score
+    Parameters:
+    -----------
+    model : Forest
+        Trained survival model
+    X_test : pandas.DataFrame
+        Test features
+    y_test : numpy.ndarray
+        Test targets with status and survival time
+        
+    Returns:
+    --------
+    float : Integrated Brier Score or np.nan if calculation fails
+    """
     try:
+        y_test_event, y_test_time, survival_probs = _prepare_survival_data(model, X_test, y_test)
+        
         # Create structured arrays for pycox
         y_train_struct = np.array([(True, 1.0)], dtype=[('event', bool), ('time', float)])  # Dummy
         y_test_struct = np.array(
@@ -385,22 +432,47 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
                 # Convert to sksurv format
                 y_sksurv = Surv.from_arrays(y_test_event, y_test_time)
                 ibs = integrated_brier_score(y_sksurv, y_sksurv, survival_matrix, eval_times)
-                metrics['integrated_brier_score'] = float(ibs) if np.isfinite(ibs) else np.nan
+                return float(ibs) if np.isfinite(ibs) else np.nan
             except ImportError:
                 # Fallback: use pycox but with proper setup
                 try:
                     ev_ibs = EvalSurv(survival_probs, y_test_time, y_test_event)
                     ev_ibs.add_censor_est(censor_surv='km', censor_durations=y_test_time, censor_events=y_test_event)
                     ibs = ev_ibs.integrated_brier_score(eval_times)
-                    metrics['integrated_brier_score'] = float(ibs) if np.isfinite(ibs) else np.nan
+                    return float(ibs) if np.isfinite(ibs) else np.nan
                 except:
-                    metrics['integrated_brier_score'] = np.nan
+                    return np.nan
         else:
-            metrics['integrated_brier_score'] = np.nan
+            return np.nan
             
     except Exception as e:
         print(f"Warning: Integrated Brier score calculation failed: {e}")
-        metrics['integrated_brier_score'] = np.nan
+        return np.nan
+
+
+def calculate_comprehensive_metrics(model, X_test, y_test):
+    """
+    Calculate comprehensive survival evaluation metrics
+    
+    Parameters:
+    -----------
+    model : Forest
+        Trained survival model
+    X_test : pandas.DataFrame
+        Test features
+    y_test : numpy.ndarray
+        Test targets with status and survival time
+        
+    Returns:
+    --------
+    dict : Dictionary containing evaluation metrics
+    """
+    metrics = {}
+    
+    # Calculate individual metrics using the modular functions
+    metrics['ctd'] = calculate_concordance_time_dependent(model, X_test, y_test)
+    metrics['time_dependent_auc'] = calculate_time_dependent_auc(model, X_test, y_test)
+    metrics['integrated_brier_score'] = calculate_integrated_brier_score(model, X_test, y_test)
     
     return metrics
 
