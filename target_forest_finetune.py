@@ -45,7 +45,7 @@ if __name__ == "__main__":
         rsf.fit(X_train, y_train)
         
         # Calculate comprehensive metrics
-        metrics = calculate_comprehensive_metrics(rsf, X_test, y_test)
+        metrics = calculate_comprehensive_metrics(rsf, X_test, y_test, y_train)
         
         # Store metrics
         for key in all_metrics.keys():

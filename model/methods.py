@@ -279,9 +279,9 @@ def calculate_concordance_time_dependent(model, X_test, y_test):
         return np.nan
 
 
-def calculate_time_dependent_auc(model, X_test, y_test):
+def calculate_time_dependent_auc(model, X_test, y_test, y_train=None):
     """
-    Calculate Time-dependent AUC at multiple time points and return the average
+    Calculate Time-dependent AUC using Uno's AUC with IPCW
     
     Parameters:
     -----------
@@ -291,6 +291,8 @@ def calculate_time_dependent_auc(model, X_test, y_test):
         Test features
     y_test : numpy.ndarray
         Test targets with status and survival time
+    y_train : numpy.ndarray, optional
+        Training targets for estimating censoring distribution (recommended for IPCW)
         
     Returns:
     --------
@@ -313,6 +315,53 @@ def calculate_time_dependent_auc(model, X_test, y_test):
         eval_times = eval_times[eval_times < max_time * 0.9]
         eval_times = eval_times[eval_times > 0]
         
+        # Try to use scikit-survival's robust implementation first
+        try:
+            from sksurv.metrics import cumulative_dynamic_auc
+            from sksurv.util import Surv
+            
+            # Convert to scikit-survival format
+            y_test_sksurv = Surv.from_arrays(y_test_event, y_test_time)
+            
+            # Use y_train if provided, otherwise use y_test for censoring distribution estimation
+            if y_train is not None:
+                y_train_event = np.array([entry[0] for entry in y_train], dtype=bool)
+                y_train_time = np.array([entry[1] for entry in y_train])
+                y_train_sksurv = Surv.from_arrays(y_train_event, y_train_time)
+            else:
+                # Fallback: use test data for censoring distribution (less optimal)
+                y_train_sksurv = y_test_sksurv
+                print("Warning: Using test data for censoring distribution estimation. "
+                      "Consider providing y_train for more robust results.")
+            
+            # Prepare survival predictions matrix (N x T)
+            # Each column should correspond to evaluation times
+            surv_preds = []
+            for t in eval_times:
+                if len(survival_probs.index) > 0:
+                    closest_idx = np.argmin(np.abs(survival_probs.index - t))
+                    surv_preds.append(survival_probs.iloc[closest_idx].values)
+                else:
+                    surv_preds.append(np.ones(len(y_test_time)) * 0.5)
+            
+            surv_preds = np.array(surv_preds).T  # Shape: (n_samples, n_times)
+            
+            # Calculate cumulative dynamic AUC with IPCW
+            # Use 1 - surv_preds as cumulative risk (higher = more likely to have event)
+            auc_scores, mean_auc = cumulative_dynamic_auc(
+                y_train_sksurv, y_test_sksurv, 1 - surv_preds, eval_times
+            )
+            
+            return float(mean_auc) if np.isfinite(mean_auc) else np.nan
+            
+        except ImportError:
+            print("Warning: scikit-survival not available. Using fallback implementation.")
+            pass
+        except Exception as e:
+            print(f"Warning: scikit-survival AUC calculation failed: {e}. Using fallback.")
+            pass
+        
+        # Fallback: manual implementation (original code)
         td_aucs = []
         for t in eval_times:
             # Define binary outcomes at time t
@@ -450,7 +499,7 @@ def calculate_integrated_brier_score(model, X_test, y_test):
         return np.nan
 
 
-def calculate_comprehensive_metrics(model, X_test, y_test):
+def calculate_comprehensive_metrics(model, X_test, y_test, y_train=None):
     """
     Calculate comprehensive survival evaluation metrics
     
@@ -462,6 +511,8 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
         Test features
     y_test : numpy.ndarray
         Test targets with status and survival time
+    y_train : numpy.ndarray, optional
+        Training targets for robust time-dependent AUC calculation with IPCW
         
     Returns:
     --------
@@ -471,7 +522,7 @@ def calculate_comprehensive_metrics(model, X_test, y_test):
     
     # Calculate individual metrics using the modular functions
     metrics['ctd'] = calculate_concordance_time_dependent(model, X_test, y_test)
-    metrics['time_dependent_auc'] = calculate_time_dependent_auc(model, X_test, y_test)
+    metrics['time_dependent_auc'] = calculate_time_dependent_auc(model, X_test, y_test, y_train)
     metrics['integrated_brier_score'] = calculate_integrated_brier_score(model, X_test, y_test)
     
     return metrics

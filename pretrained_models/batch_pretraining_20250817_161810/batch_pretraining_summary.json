@@ -1,0 +1,22 @@
+{
+  "timestamp": "20250817_161810",
+  "dataset": "SEER",
+  "total_configs": 1,
+  "successful_count": 0,
+  "failed_count": 1,
+  "successful_models": [],
+  "failed_models": [
+    "coxcc_large"
+  ],
+  "config_details": {
+    "coxcc_large": {
+      "architecture": "large",
+      "learning_rate": 0.001,
+      "batch_size": 256,
+      "epochs": 400,
+      "dropout": 0.3,
+      "use_early_stopping": false,
+      "patience": 25
+    }
+  }
+}
