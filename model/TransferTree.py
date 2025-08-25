@@ -74,8 +74,8 @@ def _calculate_logrank(y, group_indicator):
     """
     try:
         chisq, pval = compare_survival(y, group_indicator, return_stats=False)
-    except ValueError:
-        # Handle cases with insufficient data or computational issues
+    except (ValueError, np.linalg.LinAlgError):
+        # Handle cases with insufficient data, computational issues, or singular matrix
         chisq = 0
 
     return chisq
