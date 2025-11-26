@@ -103,13 +103,6 @@ python dp_based.py
   - Evaluates the model using **10-fold cross-validation**.
   - Outputs comprehensive metrics: **CTD**, **C-index**, and **Integrated Brier Score**.
 
-
-
----
-
-## 📝 Future Improvements
-- **Upload public datasets**.
-
 ---
 
 ## 🔥 Citation
