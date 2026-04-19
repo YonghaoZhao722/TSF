@@ -108,8 +108,15 @@ python dp_based.py
 ## 🔥 Citation
 
 If you use this code in your research, please cite the following paper:
-[Zhao, Y., Li, C., Shu, C., Wu, Q., Li, H., Xu, C., Li, T., Wang, Z., Luo, Z., & He, Y. (2025). Tackling small sample survival analysis via transfer learning: A study of colorectal cancer prognosis. arXiv preprint arXiv:2501.12421. https://arxiv.org/abs/2501.12421]
-
+```Bibtex
+@article{zhao2026tackling,
+  title={Tackling Small Sample Survival Analysis via Transfer Learning: A Study of Colorectal Cancer Prognosis},
+  author = {Yonghao Zhao and Changtao Li and Chi Shu and Qingbin Wu and Hong Li and Chuan Xu and Tianrui Li and Ziqiang Wang and Zhipeng Luo and Yazhou He},
+  journal={Artificial Intelligence in Medicine},
+  year={2026},
+  doi = {https://doi.org/10.1016/j.artmed.2026.103426}
+}
+```
 ---
 ### 📩 Contact
 For questions or suggestions, please reach out to: sc22yz3@leeds.ac.uk
