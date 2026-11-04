@@ -1,5 +1,8 @@
 # Transfer Survival Forest (TSF)
 
+**Author:** [Yonghao Zhao (赵永浩)](https://yonghaoz.com) · Paper summary: [yonghaoz.com/papers/tsf](https://yonghaoz.com/papers/tsf/) · [ORCID](https://orcid.org/0009-0007-3180-596X)
+
+
 ## 📌 Project Overview
 
 **Transfer Survival Forest (TSF)** is a method designed for **small-sample survival analysis**. It is based on **Random Survival Forest (RSF)** and utilizes **transfer learning** to improve survival prediction accuracy. This project implements TSF training, feature probability calculation, and target forest fine-tuning.
