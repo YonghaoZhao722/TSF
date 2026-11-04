@@ -1,6 +1,6 @@
 # Transfer Survival Forest (TSF)
 
-**Author:** [Yonghao Zhao (赵永浩)](https://yonghaoz.com) · Paper summary: [yonghaoz.com/papers/tsf](https://yonghaoz.com/papers/tsf/) · [ORCID](https://orcid.org/0009-0007-3180-596X)
+**Author:** [Yonghao Zhao](https://yonghaoz.com) · Paper summary: [yonghaoz.com/papers/tsf](https://yonghaoz.com/papers/tsf/) · [ORCID](https://orcid.org/0009-0007-3180-596X)
 
 
 ## 📌 Project Overview
