@@ -1,5 +1,24 @@
 # Transfer Survival Forest (TSF)
 
+## Citable claim
+
+Transfer learning from a related large cohort can improve survival models when the target clinical sample is small (gains observed down to n = 50 in a SEER-to-hospital colorectal cancer study).
+
+This repository implements **Transfer Survival Forest (TSF)**, which transfers Random Survival Forest tree structures from a source task and fine-tunes them on target data. Paper: https://doi.org/10.1016/j.artmed.2026.103426
+
+```bibtex
+@article{zhao2026tsf,
+  title = {Tackling small sample survival analysis via transfer learning: A study of colorectal cancer prognosis},
+  author = {Zhao, Yonghao and Li, Changtao and Shu, Chi and Wu, Qingbin and Li, Hong and Xu, Chuan and Li, Tianrui and Wang, Ziqiang and Luo, Zhipeng and He, Yazhou},
+  journal = {Artificial Intelligence in Medicine},
+  volume = {178},
+  pages = {103426},
+  year = {2026},
+  doi = {10.1016/j.artmed.2026.103426},
+  url = {https://doi.org/10.1016/j.artmed.2026.103426}
+}
+```
+
 ## 📌 Project Overview
 
 **Transfer Survival Forest (TSF)** is a method designed for **small-sample survival analysis**. It is based on **Random Survival Forest (RSF)** and utilizes **transfer learning** to improve survival prediction accuracy. This project implements TSF training, feature probability calculation, and target forest fine-tuning.
@@ -108,13 +127,17 @@ python dp_based.py
 ## 🔥 Citation
 
 If you use this code in your research, please cite the following paper:
-```Bibtex
-@article{zhao2026tackling,
-  title={Tackling Small Sample Survival Analysis via Transfer Learning: A Study of Colorectal Cancer Prognosis},
-  author = {Yonghao Zhao and Changtao Li and Chi Shu and Qingbin Wu and Hong Li and Chuan Xu and Tianrui Li and Ziqiang Wang and Zhipeng Luo and Yazhou He},
-  journal={Artificial Intelligence in Medicine},
-  year={2026},
-  doi = {https://doi.org/10.1016/j.artmed.2026.103426}
+
+```bibtex
+@article{zhao2026tsf,
+  title = {Tackling small sample survival analysis via transfer learning: A study of colorectal cancer prognosis},
+  author = {Zhao, Yonghao and Li, Changtao and Shu, Chi and Wu, Qingbin and Li, Hong and Xu, Chuan and Li, Tianrui and Wang, Ziqiang and Luo, Zhipeng and He, Yazhou},
+  journal = {Artificial Intelligence in Medicine},
+  volume = {178},
+  pages = {103426},
+  year = {2026},
+  doi = {10.1016/j.artmed.2026.103426},
+  url = {https://doi.org/10.1016/j.artmed.2026.103426}
 }
 ```
 ---
